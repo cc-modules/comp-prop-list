@@ -1,6 +1,7 @@
 const MissingRefErrMsg = 'Missing reference in comp-prop-list!\nYou may delete one or more nodes/assets that referenced in prop list component.';
 
 const KeyValuePair = cc.Class({
+  name: 'KeyValuePair',
   properties: {
     name: '',
     value: ''
