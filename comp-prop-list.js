@@ -50,15 +50,26 @@ const CompPropList = cc.Class({
         console.warn(MissingRefErrMsg);
         return;
       }
-      let name = n.name;
-      let prop = comp[n.name];
-      let newName = prefixer(n.name);
-      if (typeof prop === 'undefined') {
-        comp[newName] = n.value || n;
-      } else if (Array.isArray(prop)) {
-        prop.push(n.value || n);
+      let name, prop, newName, value;
+      if (typeof n === 'string') {
+        let seg = n.split(/[/\.]/);
+        name = seg[seg.length - 2]
+        prop = comp[name];
+        newName = prefixer(name);
+        value = n
       } else {
-        comp[newName] = [comp[newName], n.value || n];
+        name = n.name;
+        prop = comp[name];
+        newName = prefixer(name);
+        value = n.value || n;
+      }
+
+      if (typeof prop === 'undefined') {
+        comp[newName] = value;
+      } else if (Array.isArray(prop)) {
+        prop.push(value);
+      } else {
+        comp[newName] = [comp[newName], value];
       }
     });
   }
