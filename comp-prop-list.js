@@ -54,14 +54,14 @@ const CompPropList = cc.Class({
       if (typeof n === 'string') {
         let seg = n.split(/[/\.]/);
         name = seg[seg.length - 2]
-        prop = comp[name];
         newName = prefixer(name);
-        value = n
+        prop = comp[newName];
+        value = n;
       } else {
         name = n.name;
-        prop = comp[name];
         newName = prefixer(name);
-        value = n.value || n;
+        prop = comp[newName];
+        value = 'value' in n ? convert(n.value) : n;
       }
 
       if (typeof prop === 'undefined') {
@@ -76,6 +76,36 @@ const CompPropList = cc.Class({
 });
 
 CompPropList.KeyValuePair = KeyValuePair;
+
+const TrueLit = 'true';
+const FalseLit = 'false';
+const NullLit = 'null';
+const UndefinedLit = 'undefined';
+const InfinityLit = 'Infinity';
+const NaNLit = 'NaN';
+const reSignedInteger = /^[-+]?\d$/;
+const reSignedFloag = /^[+-]?\d+(\.\d+)?$/;
+function convert (val) {
+  if (val === TrueLit) {
+    return true;
+  } else if (val === FalseLit) {
+    return false;
+  } else if (val === NullLit) {
+    return null;
+  } else if (val === UndefinedLit) {
+    return undefined;
+  } else if (val === InfinityLit) {
+    return Infinity;
+  } else if (val === NaNLit) {
+    return NaN;
+  } else if (reSignedInteger.test(val)) {
+    return parseInt(val, 10);
+  } else if (reSignedFloag.test(val)) {
+    return parseFloat(val);
+  } else {
+    return val;
+  }
+}
 
 function identity (x) {
   return x;
