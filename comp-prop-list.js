@@ -8,6 +8,15 @@ const KeyValuePair = cc.Class({
   }
 });
 
+const NodeComp = cc.Class({
+  name: 'NodeComp',
+  properties: {
+    node: '',
+    component: '',
+    name: ''
+  }
+})
+
 const CompPropList = cc.Class({
   name: 'PropList',
   extends: cc.Component,
@@ -20,6 +29,10 @@ const CompPropList = cc.Class({
       url: cc.AudioClip,
       default: () => []
     },
+    nodeComps: {
+      type: NodeComp,
+      default: () => []
+    },
     tags: {
       type: KeyValuePair,
       default: () => []
@@ -30,18 +43,19 @@ const CompPropList = cc.Class({
   },
   init () {
     const comps = this.node._components;
-    for (let i in comps) {
-      let comp = comps[i];
-      if (!comp) continue;
+    comps.forEach(comp => {
+      if (!comp) return;
       if (comp.sceneScript) {
         this.inject(this.nodes, comp);
         this.inject(this.audios, comp, generatePrefixer('audio'));
         this.inject(this.tags, comp, generatePrefixer('_$', false));
-      } else if (this.node.name.match(/\$$/)) {
+        this.inject(this.nodeComps, comp, generatePrefixer('_$', false));
+      } else if (this.node.name.match(/\$$/) && comp === this) {
         this.inject(this.nodes, this.node);
         this.inject(this.tags, this.node, generatePrefixer('_$', false));
+        this.inject(this.nodeComps, this.node, generatePrefixer('_$', false));
       }
-    }
+    });
   },
   inject (array, comp, prefixer = identity) {
     if (!array) return;
@@ -61,7 +75,20 @@ const CompPropList = cc.Class({
         name = n.name;
         newName = prefixer(name);
         prop = comp[newName];
-        value = 'value' in n ? convert(n.value) : n;
+        if ('component' in n) {
+          if (n.node && n.component && n.name) {
+            let node = comp[n.node];
+            if (!node) return;
+            let com = node.getComponent(n.component);
+            if (!com) return;
+            value = com;
+            newName = newName = prefixer(n.name);
+          }
+        } else if ('value' in n) {
+          value = convert(n.value);
+        } else {
+          value = n;
+        }
       }
 
       if (typeof prop === 'undefined') {
