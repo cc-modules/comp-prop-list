@@ -52,6 +52,7 @@ const CompPropList = cc.Class({
         this.inject(this.nodeComps, comp, generatePrefixer('_$', false));
       } else if (this.node.name.match(/\$$/) && comp === this) {
         this.inject(this.nodes, this.node);
+        this.inject(this.audios, this.node, generatePrefixer('audio'));
         this.inject(this.tags, this.node, generatePrefixer('_$', false));
         this.inject(this.nodeComps, this.node, generatePrefixer('_$', false));
       }
