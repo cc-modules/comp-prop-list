@@ -4,11 +4,10 @@
   "description": "",
   "main": "comp-prop-list.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "ssh://git@code.vipkid.com.cn:3590/lingobus-fe/games/library/comp-prop-list.git"
+    "url": "ssh://git@code.vipkid.com.cn:3590/edu/cc-game/infra/comp-prop-list.git"
   },
   "author": "wangweihua@vipkid.com.cn",
   "license": "ISC"
