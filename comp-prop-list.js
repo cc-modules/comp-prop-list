@@ -26,7 +26,7 @@ const CompPropList = cc.Class({
       default: () => []
     },
     audios: {
-      url: cc.AudioClip,
+      type: cc.AudioClip,
       default: () => []
     },
     nodeComps: {
