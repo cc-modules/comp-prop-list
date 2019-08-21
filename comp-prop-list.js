@@ -100,6 +100,20 @@ const CompPropList = cc.Class({
         comp[newName] = [comp[newName], value];
       }
     });
+  },
+  getTagsAsObject (){
+    const sceneScript = this.node._components.find(c => c.sceneScript);
+    if (!sceneScript) throw new Error(`No scene script on node ${this.node.name}`);
+    return this.tags.reduce((all, it) => {
+      const key = `_$${it.name}`;
+      all[key] = sceneScript[key];
+      return all;
+    }, {});
+  },
+  writeTagsFromObject (state) {
+    const sceneScript = this.node._components.find(c => c.sceneScript);
+    if (!sceneScript) throw new Error(`No scene script on node ${this.node.name}`);
+    Object.assign(sceneScript, state);
   }
 });
 
