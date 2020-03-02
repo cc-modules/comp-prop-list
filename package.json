@@ -3,11 +3,6 @@
   "version": "1.0.2",
   "description": "",
   "main": "comp-prop-list.js",
-  "scripts": {},
-  "repository": {
-    "type": "git",
-    "url": "ssh://git@code.vipkid.com.cn:3590/edu/cc-game/infra/comp-prop-list.git"
-  },
   "author": "wangweihua@vipkid.com.cn",
   "license": "ISC"
 }
