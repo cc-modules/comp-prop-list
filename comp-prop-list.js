@@ -8,10 +8,29 @@ const KeyValuePair = cc.Class({
   }
 });
 
+const NamedNode = cc.Class({
+  name: 'NamedNode',
+  properties: {
+    node: cc.Node,
+    name: ''
+  }
+});
+
+const NamedAudioClip = cc.Class({
+  name: 'NamedAudioClip',
+  properties: {
+    audioClip: {
+      type: cc.AudioClip,
+      default: null
+    },
+    name: ''
+  }
+});
+
 const NodeComp = cc.Class({
   name: 'NodeComp',
   properties: {
-    node: '',
+    nodeName: '',
     component: '',
     name: ''
   }
@@ -22,11 +41,11 @@ const CompPropList = cc.Class({
   extends: cc.Component,
   properties: {
     nodes: {
-      type: cc.Node,
+      type: NamedNode,
       default: () => []
     },
     audios: {
-      type: cc.AudioClip,
+      type: NamedAudioClip,
       default: () => []
     },
     nodeComps: {
@@ -43,61 +62,66 @@ const CompPropList = cc.Class({
   },
   init () {
     const comps = this.node._components;
-    comps.forEach(comp => {
-      if (!comp) return;
-      if (comp.sceneScript) {
-        this.inject(this.nodes, comp);
-        this.inject(this.audios, comp, generatePrefixer('_$audio'));
-        this.inject(this.tags, comp, generatePrefixer('_$', false));
-        this.inject(this.nodeComps, comp, generatePrefixer('_$', false));
-      } else if (this.node.name.match(/\$$/) && comp === this) {
-        this.inject(this.nodes, this.node);
-        this.inject(this.audios, this.node, generatePrefixer('_$audio'));
-        this.inject(this.tags, this.node, generatePrefixer('_$', false));
-        this.inject(this.nodeComps, this.node, generatePrefixer('_$', false));
-      }
-    });
+    const comp = comps.find(it => it.sceneScript);
+    if (comp) {
+      this.inject(this.nodes, comp);
+      this.inject(this.audios, comp, generatePrefixer('_$audio'));
+      this.inject(this.tags, comp);
+      this.inject(this.nodeComps, comp, generatePrefixer('_$', false));
+    } else {
+      this.inject(this.nodes, this.node);
+      this.inject(this.audios, this.node, generatePrefixer('_$audio'));
+      this.inject(this.tags, this.node);
+      this.inject(this.nodeComps, this.node, generatePrefixer('_$', false));
+    };
   },
-  inject (array, comp, prefixer = identity) {
-    if (!array) return;
+  inject (array, compOrNode, prefixer = identity) {
+    if (!array || !array.length) return;
     array.forEach(n => {
       if (!n) {
         console.warn(MissingRefErrMsg);
         return;
       }
-      let name, prop, newName, value;
-      if (typeof n === 'string') {
-        let seg = n.split(/[/\.]/);
-        name = seg[seg.length - 2]
-        newName = prefixer(name);
-        prop = comp[newName];
-        value = n;
+      let prop, newName, value;
+      if (n.node) {
+        newName = n.name || prefixer(n.node.name);
+      } else if (n.audioClip) {
+        newName = n.name || prefixer(n.audioClip.name);
+      } else if (!isUndefiend(n.nodeName)) {
+        newName = n.name;
       } else {
-        name = n.name;
-        newName = prefixer(name);
-        prop = comp[newName];
-        if ('component' in n) {
-          if (n.node && n.component && n.name) {
-            let node = comp[n.node];
-            if (!node) return;
-            let com = node.getComponent(n.component);
-            if (!com) return;
-            value = com;
-            newName = newName = prefixer(n.name);
-          }
-        } else if ('value' in n) {
-          value = convert(n.value);
-        } else {
-          value = n;
+        newName = prefixer(n.name);
+      }
+      n = n.node || n.audioClip || n;
+      // Existing prop with newName(array of item with same name)
+      prop = compOrNode[newName];
+      if (n.component) {
+        // nodeComps
+        if (!isUndefiend(n.nodeName) && !isUndefiend(n.name) /* && isUndefiend(n.component) */) {
+          let node = compOrNode[n.nodeName] || compOrNode;
+          let com = node.getComponent(n.component);
+          if (!newName) newName = lowerFirst(com.constructor.name);
+          if (!com) return;
+          value = com;
         }
+      } else if (n.value) {
+        value = convert(n.value);
+      } else {
+        value = n;
       }
 
-      if (typeof prop === 'undefined') {
-        comp[newName] = value;
+      // merge values with the same name into an array
+      let val;
+      if (isUndefiend(prop)) {
+        val = compOrNode[newName] = value;
       } else if (Array.isArray(prop)) {
         prop.push(value);
+        val = prop;
       } else {
-        comp[newName] = [comp[newName], value];
+        compOrNode[newName] = [compOrNode[newName], value];
+      }
+      if (CC_DEBUG) {
+        cc.log(`[PropList] ${compOrNode.name}.${newName} = `, val);
       }
     });
   },
@@ -151,6 +175,14 @@ function convert (val) {
 
 function identity (x) {
   return x;
+}
+
+function isUndefiend(a) {
+  return typeof a === 'undefined';
+}
+
+function lowerFirst(str) {
+  return str[0].toLowerCase() + str.slice(1);
 }
 
 function generatePrefixer (prefix, capitalize = true) {
