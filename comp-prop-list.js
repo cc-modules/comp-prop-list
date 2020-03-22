@@ -1,3 +1,5 @@
+const pluralize = require('pluralize');
+const TAG = '[PropList]';
 const MissingRefErrMsg = 'Missing reference in comp-prop-list!\nYou may delete one or more nodes/assets that referenced in prop list component.';
 
 const KeyValuePair = cc.Class({
@@ -75,6 +77,57 @@ const CompPropList = cc.Class({
       this.inject(this.nodeComps, this.node, generatePrefixer('_$', false));
     };
   },
+  start() {
+    const comps = this.node._components;
+    const comp = comps.find(it => it.sceneScript);
+    if (comp) {
+      this.pluralize(this.nodes, comp);
+      this.pluralize(this.audios, comp, generatePrefixer('_$audio'));
+      this.pluralize(this.tags, comp);
+      this.pluralize(this.nodeComps, comp, generatePrefixer('_$', false));
+    } else {
+      this.pluralize(this.nodes, this.node);
+      this.pluralize(this.audios, this.node, generatePrefixer('_$audio'));
+      this.pluralize(this.tags, this.node);
+      this.pluralize(this.nodeComps, this.node, generatePrefixer('_$', false));
+    };
+  },
+  pluralize(array, compOrNode, prefixer = identity) {
+    if (!array || !array.length) return;
+    const injected = compOrNode.__$injected = compOrNode.__$injected || [];
+    array.forEach(n => {
+      if (!n) return;
+      let newName, val;
+      if (n.node) {
+        newName = n.name || prefixer(n.node.name);
+      } else if (n.audioClip) {
+        newName = n.name || prefixer(n.audioClip.name);
+      } else if (!isUndefiend(n.nodeName)) {
+        newName = n.name;
+      } else {
+        newName = prefixer(n.name);
+      }
+      const pluralized = pluralize(newName);
+      if (Array.isArray(compOrNode[newName])) {
+        val = compOrNode[pluralized] = compOrNode[newName];
+        delete compOrNode[newName];
+        newName = pluralized;
+        injected.push(newName);
+      } else {
+        val = compOrNode[newName];
+        if (Array.isArray(compOrNode[pluralized])) {
+          val = compOrNode[pluralized];
+        } else {
+          injected.push(newName);
+        }
+      }
+    });
+    if (CC_DEBUG) {
+      injected.forEach(newName => {
+        cc.log(`${TAG} ${compOrNode.name}.${newName} = `, compOrNode[newName]);
+      });
+    }
+  },
   inject (array, compOrNode, prefixer = identity) {
     if (!array || !array.length) return;
     array.forEach(n => {
@@ -119,9 +172,6 @@ const CompPropList = cc.Class({
         val = prop;
       } else {
         compOrNode[newName] = [compOrNode[newName], value];
-      }
-      if (CC_DEBUG) {
-        cc.log(`[PropList] ${compOrNode.name}.${newName} = `, val);
       }
     });
   },

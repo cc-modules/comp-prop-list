@@ -1,8 +1,6 @@
 {
   "name": "comp-prop-list",
-  "version": "1.0.3",
-  "description": "",
-  "main": "comp-prop-list.js",
+  "version": "1.0.4",
   "author": "wangweihua@vipkid.com.cn",
   "license": "ISC"
 }
