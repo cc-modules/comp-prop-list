@@ -1,6 +1,5 @@
 {
   "name": "comp-prop-list",
-  "version": "1.0.4",
-  "author": "wangweihua@vipkid.com.cn",
-  "license": "ISC"
+  "version": "1.0.5",
+  "description": "Properties List"
 }
