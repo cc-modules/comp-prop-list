@@ -255,6 +255,8 @@ function getTypeOf(type, val) {
       t = cc.js.getClassName(val);
       if (typeof t === 'function') t = t.name;
       return `: ${t}`;
+    } else if (typeof val === 'function') {
+      return `: ${val.name}`;
     } else {
       t = convert(val);
     }
